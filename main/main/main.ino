@@ -41,7 +41,7 @@
 BasicStepperDriver stepperX(MOTOR_STEPS, DIR_X, STEP_X);
 BasicStepperDriver stepperY(MOTOR_STEPS, DIR_Y, STEP_Y);
 BasicStepperDriver stepperZ(MOTOR_STEPS, DIR_Z, STEP_Z);
-
+void movimientoJoyStick(short, BasicStepperDriver, byte, byte);
 //Declaracion del controlador
 //SyncDriver controller(stepperX, stepperY, stepperZ);
 
@@ -97,36 +97,48 @@ void loop() {
     case 'g':
       Serial.println(grados[0]);
       break;
-    
-    case 'm':
-      short JoyIzqZ = analogRead(A6);
-      Serial.println(JoyIzqZ);
-      break;  
-    
+
+    case 'p':
+      ActivarMotores(1);
+      //movimientoJoyStick(0, stepperX, 0);
+      break;
+      
     case 'j':
       ActivarMotores(1);
       short JoyIzqX = analogRead(Joystick1[0]);
       short JoyIzqY = analogRead(Joystick1[1]);
       short JoyIzqZ = analogRead(Joystick1[2]);
 
-      //movimientoJoyStick(JoyIzqX, stepperX, Pos);
-
-      if (JoyIzqX < 400 || JoyIzqX > 600){
-        
-        JoyIzqX = map(JoyIzqX,0,1023, -10, 10);
-        grados[0] += JoyIzqX;
-        Serial.print(JoyIzqX); Serial.print("\t\t"); Serial.print(JoyIzqY); Serial.print("\t\t"); Serial.println(grados[0]);
-        stepperX.move(convertirGrados(JoyIzqX));
-      }
-      else{
-        stepperX.stop();
-      }
+      movimientoJoyStick(JoyIzqX, stepperX, 0, 100);
+      movimientoJoyStick(JoyIzqY, stepperY, 1, 100);
+      movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100);
       
       break;
 
   }
 
 }
+
+void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112){
+    
+    //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
+    //El valor no entra linealizado es decir va de 0 a 1023
+    if (joy < (512-limCentral) || joy > (512+limCentral)){
+
+      //linealizo de -10 a 10 para la suavidad
+      joy = map(joy,0,1023, -10, 10);
+      //guardar en variable global
+      grados[pos] += joy;
+      Serial.print(joy); Serial.print("\t\t");  Serial.println(grados[0]);
+      Motor.move(convertirGrados(joy));
+    }
+    
+    else{
+      Motor.stop();
+    }
+}
+
+
 
 //Funcion para hablitar y desabilitar motores de una manera entendible
 void ActivarMotores(bool Activar){
