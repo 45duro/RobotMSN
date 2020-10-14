@@ -33,6 +33,8 @@
 #define STOPPER_PIN_Z 11
 #define STOPPER_PIN_X 9
 
+#define limPos 5
+
 
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
@@ -42,6 +44,10 @@ BasicStepperDriver stepperX(MOTOR_STEPS, DIR_X, STEP_X);
 BasicStepperDriver stepperY(MOTOR_STEPS, DIR_Y, STEP_Y);
 BasicStepperDriver stepperZ(MOTOR_STEPS, DIR_Z, STEP_Z);
 void movimientoJoyStick(short, BasicStepperDriver, byte, byte);
+void ActivarMotores(boolean);
+void goToHome();
+boolean goToHome_X();
+
 //Declaracion del controlador
 //SyncDriver controller(stepperX, stepperY, stepperZ);
 
@@ -54,7 +60,11 @@ void movimientoJoyStick(short, BasicStepperDriver, byte, byte);
 *************************************/
 char dato = 0;
 int grados[3] = {0, 0, 0};
-int posiciones[50];
+int posiciones[limPos][3];
+byte contador = 0;
+
+boolean LecturaBotonGuardar; byte BotonGuardar = A2;
+boolean LecturaBotonGuardarEEPROM; byte BotonGuardarEEPROM = A3;
 
 // ****************************
 //                            *
@@ -62,14 +72,22 @@ int posiciones[50];
 //                            *
 // ****************************
 short Joystick1 [3] = {A0,A1, A6};
-short Joystick2 [2] = {A6,A7};
+
 
 void setup() {
+
+  //Declaracion de Sensores y pulsadores
   pinMode(STOPPER_PIN_Y,INPUT_PULLUP);
   pinMode(STOPPER_PIN_Z,INPUT_PULLUP);
   pinMode(STOPPER_PIN_X,INPUT_PULLUP);
+
+  pinMode(BotonGuardar, INPUT_PULLUP);
+  pinMode(BotonGuardarEEPROM, INPUT_PULLUP);
+  
+  pinMode(8,OUTPUT);
+  
   Serial.begin(9600);
-   pinMode(8,OUTPUT);
+  
   stepperX.begin(MOTOR_X_RPM, MICROSTEPS);
   stepperY.begin(MOTOR_Y_RPM, MICROSTEPS);
   stepperZ.begin(MOTOR_Z_RPM, MICROSTEPS);
@@ -100,25 +118,57 @@ void loop() {
 
     case 'p':
       ActivarMotores(1);
-      //movimientoJoyStick(0, stepperX, 0);
       break;
+
+    case 'i':
+      Serial.print(grados[0]); Serial.print("\t\t"); Serial.print(grados[1]); Serial.print("\t\t");  Serial.println(grados[2]);
+      dato = 0; 
       
     case 'j':
       ActivarMotores(1);
+
       short JoyIzqX = analogRead(Joystick1[0]);
       short JoyIzqY = analogRead(Joystick1[1]);
       short JoyIzqZ = analogRead(Joystick1[2]);
 
+      
       movimientoJoyStick(JoyIzqX, stepperX, 0, 100);
       movimientoJoyStick(JoyIzqY, stepperY, 1, 100);
       movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100);
+
+      LecturaBotones();
+      if(LecturaBotonGuardar == 0){
+        delay(300);
+        if(contador == 0){
+           Serial.println("Guardando Posiciones"); 
+        }  
+
+        for(byte i = 0; i < 3; i++)
+          posiciones[contador][i]= grados[i];
+
+        for(byte i = 0; i < 3; i++){
+          Serial.print(posiciones[contador][i]); Serial.print("\t\t");
+        }
+        Serial.println();
+        contador >= limPos -1 ? contador = 0:contador++;
+      }
       
       break;
 
-  }
+  
 
+  }
 }
 
+void LecturaBotones(){
+ 
+  LecturaBotonGuardar = digitalRead(BotonGuardar);
+  LecturaBotonGuardarEEPROM = digitalRead(BotonGuardarEEPROM);
+  
+}
+
+
+//movimientoJoyStick(valor A Pasar, Motor_para_accionar, vector donde se Guarda, Valor o rango de sensibilidad)
 void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112){
     
     //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
@@ -129,7 +179,10 @@ void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limC
       joy = map(joy,0,1023, -10, 10);
       //guardar en variable global
       grados[pos] += joy;
+
+      #if debug
       Serial.print(joy); Serial.print("\t\t");  Serial.println(grados[0]);
+      #endif
       Motor.move(convertirGrados(joy));
     }
     
