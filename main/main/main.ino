@@ -1,11 +1,10 @@
-
-#include <Wire.h>
 #include <EEPROM.h>
 
 #include <Arduino.h>
-//#include "MultiDriver.h"
-//#include "SyncDriver.h"
 #include "BasicStepperDriver.h" // generic
+#include "MultiDriver.h"
+#include "SyncDriver.h"
+
 
 #define DEBUG 0
 
@@ -43,6 +42,8 @@
 BasicStepperDriver stepperX(MOTOR_STEPS, DIR_X, STEP_X);
 BasicStepperDriver stepperY(MOTOR_STEPS, DIR_Y, STEP_Y);
 BasicStepperDriver stepperZ(MOTOR_STEPS, DIR_Z, STEP_Z);
+SyncDriver controller(stepperX, stepperY, stepperZ);
+
 void movimientoJoyStick(short, BasicStepperDriver, byte, byte);
 void ActivarMotores(boolean);
 void goToHome();
@@ -204,12 +205,20 @@ void rutinaGeneral(){
     int x = posiciones[i][0];
     int y = posiciones[i][1];
     int z = posiciones[i][2];
-
-    stepperX.move(convertirGrados(x-xAnterior));  
+    
+    /*stepperX.move(convertirGrados(x-xAnterior));  
     stepperY.move(convertirGrados(y-yAnterior));  
     stepperZ.move(convertirGrados(z-zAnterior));  
-
+    */
+    
+    
+    //Moteores sincronizados
+    controller.move(convertirGrados(x-xAnterior), 
+                    convertirGrados(y-yAnterior),
+                    convertirGrados(z-zAnterior));
+    
     xAnterior = x; yAnterior = y; zAnterior = z;
+    delay(1000);
   }
   delay(200);
   
