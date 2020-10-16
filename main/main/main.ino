@@ -33,7 +33,7 @@
 #define STOPPER_PIN_Z 11
 #define STOPPER_PIN_X 9
 
-#define limPos 5
+#define limPos 50
 
 
 /*************************************
@@ -71,8 +71,17 @@ boolean LecturaBotonGuardarEEPROM; byte BotonGuardarEEPROM = A3;
 //          Joystick          *
 //                            *
 // ****************************
-short Joystick1 [3] = {A0,A1, A6};
+short Joystick1 [3] = {A1,A0, A7};
 
+// ****************************
+//                            *
+//          EEPROM            *
+//                            *
+// ****************************
+struct ObjetoPosiciones{
+  int contadorDeDatos = 0;
+  int MatrizPosiciones [limPos] [3];
+};
 
 void setup() {
 
@@ -104,6 +113,8 @@ void loop() {
 
   switch(dato){
     case 'h':
+      //Se limpian posiciones para evitar daños
+      limpiarPosiciones();
       goToHome();
       dato=0;
       break;
@@ -123,8 +134,21 @@ void loop() {
     case 'i':
       Serial.print(grados[0]); Serial.print("\t\t"); Serial.print(grados[1]); Serial.print("\t\t");  Serial.println(grados[2]);
       dato = 0; 
-      
+
+    case 'e':
+      LecturaDeEEPROM();
+      dato=0;
+      break;
+    
+    case 'r':
+      ActivarMotores(1);
+      rutinaGeneral();
+      detenerMotores();
+      dato='h';
+      break;
+    
     case 'j':
+      
       ActivarMotores(1);
 
       short JoyIzqX = analogRead(Joystick1[0]);
@@ -152,12 +176,82 @@ void loop() {
         Serial.println();
         contador >= limPos -1 ? contador = 0:contador++;
       }
+
+      if(!LecturaBotonGuardarEEPROM){
+        delay(300);
+        GuardarEnEEPROM();
+        dato=0;
+      }
       
       break;
 
   
 
   }
+}
+
+void detenerMotores(){
+  stepperX.stop();
+  stepperY.stop();
+  stepperZ.stop();
+}
+
+void rutinaGeneral(){
+  
+  int xAnterior =0, yAnterior =0, zAnterior = 0;
+
+  for(byte i = 0; i < limPos; i++){
+    int x = posiciones[i][0];
+    int y = posiciones[i][1];
+    int z = posiciones[i][2];
+
+    stepperX.move(convertirGrados(x-xAnterior));  
+    stepperY.move(convertirGrados(y-yAnterior));  
+    stepperZ.move(convertirGrados(z-zAnterior));  
+
+    xAnterior = x; yAnterior = y; zAnterior = z;
+  }
+  delay(200);
+  
+}
+
+
+
+void LecturaDeEEPROM(){
+  Serial.println("Obteniendo datos de EPROM");
+  ObjetoPosiciones MiObjetoResultado;
+  EEPROM.get(0, MiObjetoResultado);
+  
+  Serial.println(MiObjetoResultado.contadorDeDatos);
+  for(int Filas = 0; Filas < MiObjetoResultado.contadorDeDatos; Filas++){
+    for(int Columnas = 0; Columnas < 3; Columnas++){
+      //Desempaquetar en posiciones
+      posiciones[Filas][Columnas]=MiObjetoResultado.MatrizPosiciones [Filas][Columnas];
+      Serial.print(MiObjetoResultado.MatrizPosiciones [Filas][Columnas]);
+      Serial.print("\t\t");
+      
+    }
+    Serial.println();
+  }
+}
+
+
+void GuardarEnEEPROM(){
+    Serial.println("Guardando en EEPROM");
+    ObjetoPosiciones MiObjeto;
+    MiObjeto.contadorDeDatos = limPos;
+    for(byte Filas = 0; Filas < MiObjeto.contadorDeDatos; Filas++){
+      for(int Columnas = 0; Columnas < 3; Columnas++){
+        MiObjeto.MatrizPosiciones [Filas][Columnas] =  posiciones [Filas] [Columnas];
+        Serial.print(MiObjeto.MatrizPosiciones [Filas][Columnas]);
+        Serial.print("\t\t");
+      }
+      Serial.println();
+    }
+  
+    EEPROM.put(0,MiObjeto);
+    Serial.print("Tamaño final del objeto = ");
+    Serial.println(sizeof(MiObjeto));
 }
 
 void LecturaBotones(){
@@ -176,7 +270,7 @@ void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limC
     if (joy < (512-limCentral) || joy > (512+limCentral)){
 
       //linealizo de -10 a 10 para la suavidad
-      joy = map(joy,0,1023, -10, 10);
+      joy = map(joy,0,1023, -3, 3);
       //guardar en variable global
       grados[pos] += joy;
 
@@ -255,18 +349,6 @@ void goToHome(){
   ActivarMotores(1);
   boolean flag = false;
 
-  //Setear X
-  stepperX.startMove(100 * MOTOR_STEPS * MICROSTEPS);
-  do{
-    flag = goToHome_X();
-    if(flag){
-      //Moverse ciertos grados hacia adelante
-      stepperX.move(convertirGrados(-25));
-    }
-  }while(!flag);
-
-  flag = false;
-
   //Setear Y
   stepperY.startMove(-100 * MOTOR_STEPS * MICROSTEPS);
   do{
@@ -283,9 +365,31 @@ void goToHome(){
     flag = goToHome_Z();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperZ.move(convertirGrados(-45));
+      stepperZ.move(convertirGrados(-55));
     }
   }while(!flag);
 
+  
+
+  //Setear X
+  stepperX.startMove(100 * MOTOR_STEPS * MICROSTEPS);
+  do{
+    flag = goToHome_X();
+    if(flag){
+      //Moverse ciertos grados hacia adelante
+      stepperX.move(convertirGrados(-25));
+    }
+  }while(!flag);
+
+  flag = false;
+
   ActivarMotores(0);
+
+  
+}
+
+void limpiarPosiciones(){
+  for(byte i=0; i < 3; i++){
+    grados[i]=0;
+  }
 }
