@@ -6,7 +6,7 @@
 #include "SyncDriver.h"
 
 
-#define DEBUG 0
+#define DEBUG 1
 
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
@@ -160,7 +160,15 @@ void loop() {
       movimientoJoyStick(JoyIzqX, stepperX, 0, 100);
       movimientoJoyStick(JoyIzqY, stepperY, 1, 100);
       movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100);
+      
+      
+      for(byte i = 0; i < 3; i++){
+        Serial.print(grados[i]); Serial.print("   ");}
 
+
+      Serial.println();
+
+      
       LecturaBotones();
       if(LecturaBotonGuardar == 0){
         delay(300);
@@ -206,19 +214,23 @@ void rutinaGeneral(){
     int y = posiciones[i][1];
     int z = posiciones[i][2];
     
-    /*stepperX.move(convertirGrados(x-xAnterior));  
-    stepperY.move(convertirGrados(y-yAnterior));  
-    stepperZ.move(convertirGrados(z-zAnterior));  
-    */
+//    stepperX.move(convertirGrados(x-xAnterior));  
+//    stepperY.move(convertirGrados(y-yAnterior));  
+//    stepperZ.move(convertirGrados(z-zAnterior));  
     
     
-    //Moteores sincronizados
+    
+    //Motores sincronizados
     controller.move(convertirGrados(x-xAnterior), 
                     convertirGrados(y-yAnterior),
                     convertirGrados(z-zAnterior));
     
     xAnterior = x; yAnterior = y; zAnterior = z;
-    delay(1000);
+
+    if(!xAnterior && !yAnterior && !zAnterior)
+      delay(0);
+    else
+      delay(1000);
   }
   delay(200);
   
@@ -279,13 +291,13 @@ void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limC
     if (joy < (512-limCentral) || joy > (512+limCentral)){
 
       //linealizo de -10 a 10 para la suavidad
-      joy = map(joy,0,1023, -3, 3);
+      joy = map(joy,0,1023, -1, 1);
       //guardar en variable global
       grados[pos] += joy;
 
-      #if debug
-      Serial.print(joy); Serial.print("\t\t");  Serial.println(grados[0]);
-      #endif
+//      #if debug
+//        Serial.print(joy); Serial.print("\t\t");  Serial.print(grados[pos]);
+//      #endif
       Motor.move(convertirGrados(joy));
     }
     
