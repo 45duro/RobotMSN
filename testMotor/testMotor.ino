@@ -13,8 +13,8 @@
 
 // All the wires needed for full functionality
 
-#define DIR 2
-#define STEP 5
+#define DIR 3
+#define STEP 6
 
 //Uncomment line to use enable/disable functionality
 //#define SLEEP 13
@@ -52,13 +52,14 @@ void loop() {
       /*
        * Moving motor one full revolution using the degree notation
        */
-      stepper.move(convertirGrados(45));
+      stepper.move(convertirGrados(45/2)); 
+      //stepper.move(convertirGrados(60));
       //stepper.rotate(180);
   
       /*
        * Moving motor to original position using steps
        */
-      stepper.move(convertirGrados(-45));
+      //stepper.move(-254.75);
       //stepper.rotate(-180);
       //stepper.move(-MOTOR_STEPS*MICROSTEPS);
   
@@ -67,10 +68,23 @@ void loop() {
   
       digitalWrite(8,1);  
     }
+
+    if(dato == 'b'){
+      Serial.println("entro");
+      digitalWrite(8,0);
+      // energize coils - the motor will hold position
+      // stepper.enable();
     
+      /*
+       * Moving motor one full revolution using the degree notation
+       */
+      //stepper.move(convertirGrados(-60));
+      stepper.move(convertirGrados(-45/2)); 
+      digitalWrite(8,1);
+    }
 }
 
 int convertirGrados(short degree){
-  int result = 11.3222*degree;
+  int result = 22.6444*degree;
   return result;
 }
