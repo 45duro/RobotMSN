@@ -34,7 +34,10 @@
 
 #define limPos 50
 
-
+#define sizeBrazo 80
+#define sizeAnteBrazo 80
+#define phi 3.141593
+#define SubidaVertical 45
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
 *************************************/
@@ -58,8 +61,9 @@ boolean goToHome_X();
   VARIABLES GLOBALES
 *************************************/
 char dato = 0;
-int grados[3] = {0, 0, 90};
+int grados[3] = {0, 90, 90};
 int posiciones[limPos][3];
+int gradosDecorador[3];
 byte contador = 0;
 
 boolean LecturaBotonGuardar; byte BotonGuardar = A2;
@@ -81,6 +85,20 @@ struct ObjetoPosiciones{
   int contadorDeDatos = 0;
   int MatrizPosiciones [limPos] [3];
 };
+
+// ****************************
+//                            *
+//        CINEMATICA          *
+//                            *
+// ****************************
+
+//90 es el valor de inicio y 30 valor que viene de la matriz
+// asi mismo en c puesto 90 valor de inicio y  - 20 valor de la matriz
+//float Bpuesto= 90-60, Cpuesto= 90 -(-20);
+float Bpuesto= 60, Cpuesto= 90 -(-
+20);
+float radioC;
+float x, y, teta =0, r;
 
 
 float convertirGrados(short degree,  byte relacion = 1);
@@ -136,6 +154,13 @@ void loop() {
     case 'i':
       Serial.print(grados[0]); Serial.print("\t\t"); Serial.print(grados[1]); Serial.print("\t\t");  Serial.println(grados[2]);
       dato = 0; 
+      break;
+      
+    case 'v':
+      ActivarMotores(1);
+      stepperY.move(convertirGrados(42)); 
+      dato = 'o';
+      break;
 
     case 'e':
       LecturaDeEEPROM();
@@ -147,6 +172,16 @@ void loop() {
       rutinaGeneral();
       detenerMotores();
       dato='h';
+      break;
+
+    case 'c':
+      ActivarMotores(1);
+      controller.move(convertirGrados(0,2), convertirGrados(90-60), convertirGrados(20));
+      delay(5000);
+      controller.move(convertirGrados(0,2), convertirGrados(-30), convertirGrados(-20));
+      ActivarMotores(0);
+      
+      dato = 0;
       break;
     
     case 'j':
