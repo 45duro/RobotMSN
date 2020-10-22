@@ -37,7 +37,7 @@
 #define sizeBrazo 80
 #define sizeAnteBrazo 80
 #define phi 3.141593
-#define SubidaVertical 45
+#define SubidaVertical 20
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
 *************************************/
@@ -61,7 +61,7 @@ boolean goToHome_X();
   VARIABLES GLOBALES
 *************************************/
 char dato = 0;
-int grados[3] = {0, 90, 90};
+int grados[3] = {0, 0, 0};
 int posiciones[limPos][3];
 int gradosDecorador[3];
 byte contador = 0;
@@ -94,9 +94,8 @@ struct ObjetoPosiciones{
 
 //90 es el valor de inicio y 30 valor que viene de la matriz
 // asi mismo en c puesto 90 valor de inicio y  - 20 valor de la matriz
-//float Bpuesto= 90-60, Cpuesto= 90 -(-20);
-float Bpuesto= 60, Cpuesto= 90 -(-
-20);
+float Bpuesto= 0, Cpuesto= 0; 
+float outCinematicoB=0, outCinematicoC=0;
 float radioC;
 float x, y, teta =0, r;
 
@@ -129,6 +128,7 @@ void setup() {
 void loop() {
   if(Serial.available()>0){
     dato = Serial.read();
+    Serial.println(dato);
   }
 
   switch(dato){
@@ -174,17 +174,28 @@ void loop() {
       dato='h';
       break;
 
+
     case 'c':
       ActivarMotores(1);
-      controller.move(convertirGrados(0,2), convertirGrados(90-60), convertirGrados(20));
+      controller.move(convertirGrados(0,2), convertirGrados(90), convertirGrados(0));
+      cinematicaInv(90, 0);
+      
       delay(5000);
-      controller.move(convertirGrados(0,2), convertirGrados(-30), convertirGrados(-20));
+      
+      controller.move(convertirGrados(0,2), 
+      convertirGrados(outCinematicoB), 
+      convertirGrados(outCinematicoC));
       ActivarMotores(0);
+      delay(200);
       
       dato = 0;
       break;
+  
+
+  }
+
+  if(dato == 'j'){
     
-    case 'j':
       
       ActivarMotores(1);
 
@@ -200,10 +211,10 @@ void loop() {
       
       for(byte i = 0; i < 3; i++){
         Serial.print(grados[i]); Serial.print("   ");}
-
+      
 
       Serial.println();
-
+      
       
       LecturaBotones();
       if(LecturaBotonGuardar == 0){
@@ -215,11 +226,18 @@ void loop() {
         for(byte i = 0; i < 3; i++)
           posiciones[contador][i]= grados[i];
 
+        //Agregando la cinematica
+        cinematicaInv(grados[1], grados[2]);
+        posiciones[contador+1][0]= grados[0];
+        posiciones[contador+1][1]= outCinematicoB;
+        posiciones[contador+1][2]= outCinematicoC;
+          
+
         for(byte i = 0; i < 3; i++){
           Serial.print(posiciones[contador][i]); Serial.print("\t\t");
         }
         Serial.println();
-        contador >= limPos -1 ? contador = 0:contador++;
+        contador >= limPos -1 ? contador = 0:contador+=2;
       }
 
       if(!LecturaBotonGuardarEEPROM){
@@ -228,9 +246,7 @@ void loop() {
         dato=0;
       }
       
-      break;
-
-  
+      
 
   }
 }
@@ -255,17 +271,25 @@ void rutinaGeneral(){
 //    stepperZ.move(convertirGrados(z-zAnterior));  
     
     
-    
-    //Motores sincronizados
     controller.move(convertirGrados(x-xAnterior, 2), 
                     convertirGrados(y-yAnterior),
                     convertirGrados(z-zAnterior));
     
     xAnterior = x; yAnterior = y; zAnterior = z;
 
+    
+   
+
     if(!xAnterior && !yAnterior && !zAnterior)
       delay(0);
     else
+      //Serial.println("entro");
+      //Motores sincronizados
+      //cinematicaInv(y, z);
+      //controller.move(convertirGrados(x-xAnterior, 2), 
+      //              convertirGrados(y-outCinematicoB),
+      //             convertirGrados(z-outCinematicoC));
+      //controller.move(convertirGrados(0,2), convertirGrados(outCinematicoB), convertirGrados(outCinematicoC));
       delay(1000);
   }
   delay(200);
@@ -422,7 +446,7 @@ void goToHome(){
     flag = goToHome_Y();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperY.move(convertirGrados(10));
+      stepperY.move(convertirGrados(15));
     }
   }while(!flag);
 
