@@ -61,7 +61,7 @@ void controlCinematico(){
 
 void cinematicaInv(int AnguloB, int AnguloC){
   Bpuesto = 90 - AnguloB;
-  Cpuesto = 90 -(-AnguloC);
+  Cpuesto = AnguloC;
 
   //Serial.print("Bpuesto: ");  Serial.print(Bpuesto); 
   //Serial.print(" Cpuesto: ");  Serial.println(Cpuesto); 
@@ -110,7 +110,7 @@ void cinematicaInv(int AnguloB, int AnguloC){
       //Serial.print(" Cpuesto: ");  Serial.println(Cpuesto);
       //Serial.print(" nuevoC: ");  Serial.println(nuevoC);
       float CpuestoNuevo = (180 - nuevoC) - Cpuesto;
-      Serial.print("CpuestoN: ");  Serial.println(-1*CpuestoNuevo);
+      Serial.print("CpuestoN: ");  Serial.println(CpuestoNuevo);
       
       outCinematicoB=BpuestoNuevo;
       outCinematicoC=CpuestoNuevo*-1;
@@ -119,7 +119,7 @@ void cinematicaInv(int AnguloB, int AnguloC){
       Serial.println(outCinematicoC);
 
       outCinematicoB= AnguloB+ outCinematicoB;
-      outCinematicoC= AnguloC- outCinematicoC;
+      outCinematicoC= AnguloC+ outCinematicoC;
 
       Serial.println(outCinematicoB);
       Serial.println(outCinematicoC);

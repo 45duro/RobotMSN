@@ -61,7 +61,7 @@ boolean goToHome_X();
   VARIABLES GLOBALES
 *************************************/
 char dato = 0;
-int grados[3] = {0, 0, 0};
+int grados[3] = {0, 0, 90};
 int posiciones[limPos][3];
 int gradosDecorador[3];
 byte contador = 0;
@@ -483,6 +483,6 @@ void goToHome(){
 
 void limpiarPosiciones(){
   for(byte i=0; i < 3; i++){
-    grados[i]=0;
+    i == 2? grados[i]= 90 : grados[i]=0;
   }
 }
