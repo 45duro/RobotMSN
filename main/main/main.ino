@@ -37,7 +37,7 @@
 #define sizeBrazo 80
 #define sizeAnteBrazo 80
 #define phi 3.141593
-#define SubidaVertical 20
+#define SubidaVertical 25
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
 *************************************/
@@ -61,8 +61,8 @@ boolean goToHome_X();
   VARIABLES GLOBALES
 *************************************/
 char dato = 0;
-int grados[3] = {0, 0, 90};
-int posiciones[limPos][3];
+float grados[3] = {0, 0, 90};
+float posiciones[limPos][3];
 int gradosDecorador[3];
 byte contador = 0;
 
@@ -83,7 +83,7 @@ short Joystick1 [3] = {A1,A0, A7};
 // ****************************
 struct ObjetoPosiciones{
   int contadorDeDatos = 0;
-  int MatrizPosiciones [limPos] [3];
+  float MatrizPosiciones [limPos] [3];
 };
 
 // ****************************
@@ -177,8 +177,10 @@ void loop() {
 
     case 'c':
       ActivarMotores(1);
-      controller.move(convertirGrados(0,2), convertirGrados(90), convertirGrados(0));
-      cinematicaInv(90, 0);
+      controller.move(0, convertirGrados(-7.57), convertirGrados(-25));
+      /*
+      controller.move(convertirGrados(0,2), convertirGrados(30), convertirGrados(20));
+      cinematicaInv(30, 20);
       
       delay(5000);
       
@@ -187,7 +189,7 @@ void loop() {
       convertirGrados(outCinematicoC));
       ActivarMotores(0);
       delay(200);
-      
+      */
       dato = 0;
       break;
   
@@ -259,38 +261,43 @@ void detenerMotores(){
 
 void rutinaGeneral(){
   
-  int xAnterior =0, yAnterior =0, zAnterior = 0;
+  int xAnterior =0, yAnterior =0, zAnterior = 90;
 
   for(byte i = 0; i < limPos; i++){
     int x = posiciones[i][0];
     int y = posiciones[i][1];
     int z = posiciones[i][2];
-    
-//    stepperX.move(convertirGrados(x-xAnterior));  
-//    stepperY.move(convertirGrados(y-yAnterior));  
-//    stepperZ.move(convertirGrados(z-zAnterior));  
-    
-    
-    controller.move(convertirGrados(x-xAnterior, 2), 
-                    convertirGrados(y-yAnterior),
-                    convertirGrados(z-zAnterior));
-    
-    xAnterior = x; yAnterior = y; zAnterior = z;
 
-    
+    if(((y-yAnterior) < -50 || (y-yAnterior) > 50 || (z-zAnterior) > 50 || (z-zAnterior) < -50) && ( i != 0 && i != limPos-1)){
+      Serial.print("Error por desbordamiento en linea: "); 
+      Serial.print(i) ; 
+      Serial.println(" se puede estrellar") ; 
+    }
+    else{
+      stepperX.move(convertirGrados(x-xAnterior, 2));  
+  //    stepperY.move(convertirGrados(y-yAnterior));  
+  //    stepperZ.move(convertirGrados(z-zAnterior));  
+      
+      //Solucionar el tema de los angulos cuando se pasan y que de en recta
+      if((yAnterior > y){
+        controller.move(0, 
+                        convertirGrados(-1*(y-yAnterior)),
+                        convertirGrados(z-zAnterior));
+      }
+      else{
+        controller.move(0, 
+                        convertirGrados(y-yAnterior),
+                        convertirGrados(z-zAnterior));
+      }
+
+    }
+    xAnterior = x; yAnterior = y; zAnterior = z;
    
 
     if(!xAnterior && !yAnterior && !zAnterior)
       delay(0);
     else
-      //Serial.println("entro");
-      //Motores sincronizados
-      //cinematicaInv(y, z);
-      //controller.move(convertirGrados(x-xAnterior, 2), 
-      //              convertirGrados(y-outCinematicoB),
-      //             convertirGrados(z-outCinematicoC));
-      //controller.move(convertirGrados(0,2), convertirGrados(outCinematicoB), convertirGrados(outCinematicoC));
-      delay(1000);
+      delay(5000);
   }
   delay(200);
   
@@ -458,7 +465,7 @@ void goToHome(){
     flag = goToHome_Z();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperZ.move(convertirGrados(-35));
+      stepperZ.move(convertirGrados(-33));
     }
   }while(!flag);
 
