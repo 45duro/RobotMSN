@@ -4,7 +4,7 @@
 #include "BasicStepperDriver.h" // generic
 #include "MultiDriver.h"
 #include "SyncDriver.h"
-
+#include "GFButton.h"
 
 #define DEBUG 0
 
@@ -66,8 +66,8 @@ float posiciones[limPos][3];
 int gradosDecorador[3];
 byte contador = 0;
 
-boolean LecturaBotonGuardar; byte BotonGuardar = A2;
-boolean LecturaBotonGuardarEEPROM; byte BotonGuardarEEPROM = A3;
+short LecturaBotonGuardar; const byte BotonGuardar = A2;
+boolean LecturaBotonGuardarEEPROM; const byte BotonGuardarEEPROM = A3;
 
 // ****************************
 //                            *
@@ -75,6 +75,7 @@ boolean LecturaBotonGuardarEEPROM; byte BotonGuardarEEPROM = A3;
 //                            *
 // ****************************
 short Joystick1 [3] = {A1,A0, A7};
+GFButton btn = GFButton(BotonGuardar, E_GFBUTTON_PULLUP_INTERNAL);
 
 // ****************************
 //                            *
@@ -121,7 +122,12 @@ void setup() {
   stepperZ.begin(MOTOR_Z_RPM, MICROSTEPS);
 
   ActivarMotores(false);
-  
+
+  // Attach callbacks to the button object
+  //btn.setPressHandler(button_on_press);
+  btn.setHoldHandler(button_on_hold);
+  //btn.setReleaseHandler(button_on_release);
+  btn.setClicksHandler(button_on_click);
 
 }
 
@@ -137,6 +143,10 @@ void loop() {
       limpiarPosiciones();
       goToHome();
       dato=0;
+      break;
+
+   case 'b':
+      //button.check();
       break;
 
     case 'o':
@@ -219,7 +229,14 @@ void loop() {
       
       
       LecturaBotones();
-      if(LecturaBotonGuardar == 0){
+
+      //Chequeando el boton 1 o joystick principal
+      btn.process();
+
+      //Viene con tres estados si es 2, guarde un punto con cinematica de subida
+      //Si es un 1 guarde un punto de paso sin cinematica
+      //si es -1 no haga nada
+      if(LecturaBotonGuardar == 2 ){
         delay(300);
         if(contador == 0){
            Serial.println("Guardando Posiciones"); 
@@ -240,6 +257,25 @@ void loop() {
         }
         Serial.println();
         contador >= limPos -1 ? contador = 0:contador+=2;
+        //Romper el ciclo ya que desde la misma clase no se deja
+        LecturaBotonGuardar =0;
+      }
+      else if(LecturaBotonGuardar == 1){
+        delay(300);
+        if(contador == 0){
+           Serial.println("Guardando Posiciones"); 
+        } 
+        for(byte i = 0; i < 3; i++)
+          posiciones[contador][i]= grados[i];
+
+        for(byte i = 0; i < 3; i++){
+          Serial.print(posiciones[contador][i]); Serial.print("\t\t");
+        }
+        Serial.println();
+        contador >= limPos -1 ? contador = 0:contador+=1;
+
+        //Romper el ciclo ya que desde la misma clase no se deja
+        LecturaBotonGuardar = 0;
       }
 
       if(!LecturaBotonGuardarEEPROM){
@@ -264,6 +300,7 @@ void rutinaGeneral(){
   int xAnterior =0, yAnterior =0, zAnterior = 90;
 
   for(byte i = 0; i < limPos; i++){
+    Serial.println("entro") ;
     int x = posiciones[i][0];
     int y = posiciones[i][1];
     int z = posiciones[i][2];
@@ -291,7 +328,7 @@ void rutinaGeneral(){
     if(!xAnterior && !yAnterior && !zAnterior)
       delay(0);
     else
-      delay(5000);
+      delay(1000);
   }
   delay(200);
   
@@ -336,12 +373,7 @@ void GuardarEnEEPROM(){
     Serial.println(sizeof(MiObjeto));
 }
 
-void LecturaBotones(){
- 
-  LecturaBotonGuardar = digitalRead(BotonGuardar);
-  LecturaBotonGuardarEEPROM = digitalRead(BotonGuardarEEPROM);
-  
-}
+
 
 
 //movimientoJoyStick(valor A Pasar, Motor_para_accionar, vector donde se Guarda, Valor o rango de sensibilidad)
