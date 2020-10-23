@@ -279,16 +279,10 @@ void rutinaGeneral(){
   //    stepperZ.move(convertirGrados(z-zAnterior));  
       
       //Solucionar el tema de los angulos cuando se pasan y que de en recta
-      if((yAnterior > y){
-        controller.move(0, 
-                        convertirGrados(-1*(y-yAnterior)),
-                        convertirGrados(z-zAnterior));
-      }
-      else{
         controller.move(0, 
                         convertirGrados(y-yAnterior),
                         convertirGrados(z-zAnterior));
-      }
+      
 
     }
     xAnterior = x; yAnterior = y; zAnterior = z;
@@ -460,12 +454,12 @@ void goToHome(){
   
 
   //Setear Z
-  stepperZ.startMove(100 * MOTOR_STEPS * MICROSTEPS);
+  stepperZ.startMove(-100 * MOTOR_STEPS * MICROSTEPS);
   do{
     flag = goToHome_Z();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperZ.move(convertirGrados(-33));
+      stepperZ.move(convertirGrados(33));
     }
   }while(!flag);
 
