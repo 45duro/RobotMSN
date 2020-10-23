@@ -11,9 +11,9 @@
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 400
-#define MOTOR_Y_RPM 400
-#define MOTOR_Z_RPM 400
+#define MOTOR_X_RPM 500
+#define MOTOR_Y_RPM 500
+#define MOTOR_Z_RPM 500
 
 // X motor
 #define DIR_X 2
@@ -300,13 +300,15 @@ void rutinaGeneral(){
   int xAnterior =0, yAnterior =0, zAnterior = 90;
 
   for(byte i = 0; i < limPos; i++){
-    Serial.println("entro") ;
+
     int x = posiciones[i][0];
     int y = posiciones[i][1];
     int z = posiciones[i][2];
 
+    Serial.print(F("G")); Serial.println(i);
+
     if(((y-yAnterior) < -50 || (y-yAnterior) > 50 || (z-zAnterior) > 50 || (z-zAnterior) < -50) && ( i != 0 && i != limPos-1)){
-      Serial.print("Error por desbordamiento en linea: "); 
+      Serial.print(F("Error por desbordamiento en linea: ")); 
       Serial.print(i) ; 
       Serial.println(" se puede estrellar") ; 
     }
@@ -382,7 +384,7 @@ void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limC
     //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
     //El valor no entra linealizado es decir va de 0 a 1023
     if (joy < (512-limCentral) || joy > (512+limCentral)){
-
+    
       //linealizo de -10 a 10 para la suavidad
       joy = map(joy,0,1023, -1, 1);
       //guardar en variable global
@@ -479,7 +481,7 @@ void goToHome(){
     flag = goToHome_Y();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperY.move(convertirGrados(15));
+      stepperY.move(convertirGrados(10));
     }
   }while(!flag);
 
