@@ -11,9 +11,9 @@
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 500
-#define MOTOR_Y_RPM 500
-#define MOTOR_Z_RPM 500
+#define MOTOR_X_RPM 400
+#define MOTOR_Y_RPM 400
+#define MOTOR_Z_RPM 400
 
 // X motor
 #define DIR_X 2
@@ -76,6 +76,7 @@ boolean LecturaBotonGuardarEEPROM; const byte BotonGuardarEEPROM = A3;
 // ****************************
 short Joystick1 [3] = {A1,A0, A7};
 GFButton btn = GFButton(BotonGuardar, E_GFBUTTON_PULLUP_INTERNAL);
+short auxJoy1[3]= {0,0,0}; 
 
 // ****************************
 //                            *
@@ -115,7 +116,7 @@ void setup() {
   
   pinMode(8,OUTPUT);
   
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   stepperX.begin(MOTOR_X_RPM, MICROSTEPS);
   stepperY.begin(MOTOR_Y_RPM, MICROSTEPS);
@@ -219,13 +220,34 @@ void loop() {
       movimientoJoyStick(JoyIzqX, stepperX, 0, 100, 2);
       movimientoJoyStick(JoyIzqY, stepperY, 1, 100, 1);
       movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100, 1);
-      
-      
-      for(byte i = 0; i < 3; i++){
-        Serial.print(grados[i]); Serial.print("   ");}
+
+      for(byte i = 1; i < 3; i++){
+        Serial.print(auxJoy1[i]); Serial.print("   ");}
       
 
       Serial.println();
+      
+      //Extraccion del valor de joysTick en los ejes Y y Z
+      grados[1] += auxJoy1[1];
+      grados[2] += auxJoy1[2];
+
+      //Movimientos de X y Z sincronizados
+      if(auxJoy1[1] != 0 || auxJoy1[2] != 0 ){
+        controller.move(0, convertirGrados(auxJoy1[1]),convertirGrados(auxJoy1[2]));
+
+        //Se envia a 0 para que no siga dejando sincronizando sino hasta el proximo llamado
+        auxJoy1[1] = 0; auxJoy1[2] = 0;
+      }
+      else{
+        stepperY.stop();
+        stepperZ.stop();
+      }
+      
+//      for(byte i = 0; i < 3; i++){
+//        Serial.print(grados[i]); Serial.print("   ");}
+//      
+//
+//      Serial.println();
       
       
       LecturaBotones();
@@ -390,15 +412,20 @@ void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limC
       //guardar en variable global
       grados[pos] += joy;
 
-//      #if debug
-//        Serial.print(joy); Serial.print("\t\t");  Serial.print(grados[pos]);
-//      #endif
-      Motor.move(convertirGrados(joy, relacion));
-    }
+
+      if(pos == 0){
+        Motor.move(convertirGrados(joy, relacion));
+      }else{
+        auxJoy1[pos]= joy;
+      }
     
-    else{
-      Motor.stop();
     }
+    else{
+      if(pos == 0){
+        Motor.stop();
+      }
+    }
+
 }
 
 

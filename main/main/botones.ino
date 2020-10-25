@@ -17,8 +17,7 @@ void button_on_press(GFButton & btn)
 /**
    CALLBACK FOR BUTTON HOLD EVENT
 */
-void button_on_hold(GFButton & btn)
-{
+void button_on_hold(GFButton & btn){
   // Use only the first gold event
   if (btn.isFirstHold())
   {
