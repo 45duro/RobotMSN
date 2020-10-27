@@ -11,9 +11,9 @@
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 100
-#define MOTOR_Y_RPM 100
-#define MOTOR_Z_RPM 100
+#define MOTOR_X_RPM 300
+#define MOTOR_Y_RPM 300
+#define MOTOR_Z_RPM 300
 
 // X motor
 #define DIR_X 2
@@ -306,7 +306,10 @@ void rutinaGeneral(){
     int y = posiciones[i][1];
     int z = posiciones[i][2];
 
-    Serial.print(F("G")); Serial.println(i);
+    Serial.print(F("G")); Serial.print(i);
+    Serial.print(F("\tx: ")); Serial.print(x);
+    Serial.print(F("\ty: ")); Serial.print(y);
+    Serial.print(F("\tz: ")); Serial.println(z);
 
     if(((y-yAnterior) < -50 || (y-yAnterior) > 50 || (z-zAnterior) > 50 || (z-zAnterior) < -50) && ( i != 0 && i != limPos-1)){
       Serial.print(F("Error por desbordamiento en linea: ")); 
@@ -319,7 +322,8 @@ void rutinaGeneral(){
   //    stepperZ.move(convertirGrados(z-zAnterior));  
       
       //Solucionar el tema de los angulos cuando se pasan y que de en recta
-        controller.move(0, 
+      delay(1000);
+      controller.move(0, 
                         convertirGrados(y-yAnterior),
                         convertirGrados(z-zAnterior));
       
@@ -331,9 +335,8 @@ void rutinaGeneral(){
     if(!xAnterior && !yAnterior && !zAnterior)
       delay(0);
     else
-      delay(1000);
+      delay(500);
   }
-  delay(200);
   
 }
 
