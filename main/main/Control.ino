@@ -1,6 +1,7 @@
 
 
 void cinematicaInv(int AnguloB, int AnguloC){
+  
   Bpuesto = 90 - AnguloB;
   Cpuesto = AnguloC;
 
@@ -64,5 +65,33 @@ void cinematicaInv(int AnguloB, int AnguloC){
 
       Serial.println(outCinematicoB);
       Serial.println(outCinematicoC);
+
+}
+
+
+//movimientoJoyStick(valor A Pasar, Motor_para_accionar, vector donde se Guarda, Valor o rango de sensibilidad)
+short movimientoJoyStick(short joy, byte pos, byte limCentral = 112){
+    
+    //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
+    //El valor no entra linealizado es decir va de 0 a 1023
+    if (joy < (512-limCentral) || joy > (512+limCentral)){
+    
+      //linealizo de -10 a 10 para la suavidad
+      joy = map(joy,0,1023, -1, 1);
+      //guardar en variable global
+      grados[pos] += joy;
+
+      return joy;
+    }
+    else{
+      return 0;
+    }
+//      #if debug
+//        Serial.print(joy); Serial.print("\t\t");  Serial.print(grados[pos]);
+//      #endif
+
+    
+
+    
 
 }

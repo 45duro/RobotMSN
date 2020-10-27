@@ -47,7 +47,6 @@ BasicStepperDriver stepperY(MOTOR_STEPS, DIR_Y, STEP_Y);
 BasicStepperDriver stepperZ(MOTOR_STEPS, DIR_Z, STEP_Z);
 SyncDriver controller(stepperX, stepperY, stepperZ);
 
-void movimientoJoyStick(short, BasicStepperDriver, byte, byte);
 void ActivarMotores(boolean);
 void goToHome();
 boolean goToHome_X();
@@ -102,7 +101,8 @@ float x, y, teta =0, r;
 
 
 float convertirGrados(short degree,  byte relacion = 1);
-void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112, byte relacion = 1);
+short movimientoJoyStick(short joy, byte pos, byte limCentral = 112);
+//void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112, byte relacion = 1);
 void setup() {
 
   //Declaracion de Sensores y pulsadores
@@ -215,14 +215,25 @@ void loop() {
       short JoyIzqY = analogRead(Joystick1[1]);
       short JoyIzqZ = analogRead(Joystick1[2]);
 
+      JoyIzqX = movimientoJoyStick(JoyIzqX, 0);
+      JoyIzqY = movimientoJoyStick(JoyIzqY, 1);
+      JoyIzqZ = movimientoJoyStick(JoyIzqZ, 2);
       
-      movimientoJoyStick(JoyIzqX, stepperX, 0, 100, 2);
-      movimientoJoyStick(JoyIzqY, stepperY, 1, 100, 1);
-      movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100, 1);
       
-      
+      //Movimientos de X Y Z sincronizados
+       if(JoyIzqX != 0 || JoyIzqY != 0 || JoyIzqZ != 0 ){
+         //controller.move(0, convertirGrados(auxJoy1[1]),convertirGrados(auxJoy1[2]));
+         controller.move(convertirGrados(JoyIzqX, 2), convertirGrados(JoyIzqY), convertirGrados(JoyIzqZ));
+       }
+       else{
+          stepperX.stop();
+          stepperY.stop();
+          stepperZ.stop();
+       }
+
       for(byte i = 0; i < 3; i++){
-        Serial.print(grados[i]); Serial.print("   ");}
+        Serial.print(grados[i]); Serial.print("   ");
+      }
       
 
       Serial.println();
@@ -260,6 +271,8 @@ void loop() {
         //Romper el ciclo ya que desde la misma clase no se deja
         LecturaBotonGuardar =0;
       }
+
+      //Doble CLICK
       else if(LecturaBotonGuardar == 1){
         delay(300);
         if(contador == 0){
@@ -376,33 +389,6 @@ void GuardarEnEEPROM(){
 }
 
 
-
-
-//movimientoJoyStick(valor A Pasar, Motor_para_accionar, vector donde se Guarda, Valor o rango de sensibilidad)
-void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112, byte relacion = 1){
-    
-    //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
-    //El valor no entra linealizado es decir va de 0 a 1023
-    if (joy < (512-limCentral) || joy > (512+limCentral)){
-    
-      //linealizo de -10 a 10 para la suavidad
-      joy = map(joy,0,1023, -1, 1);
-      //guardar en variable global
-      grados[pos] += joy;
-
-//      #if debug
-//        Serial.print(joy); Serial.print("\t\t");  Serial.print(grados[pos]);
-//      #endif
-      Motor.move(convertirGrados(joy, relacion));
-    }
-    
-    else{
-      Motor.stop();
-    }
-}
-
-
-
 //Funcion para hablitar y desabilitar motores de una manera entendible
 void ActivarMotores(bool Activar){
 
@@ -493,7 +479,7 @@ void goToHome(){
     flag = goToHome_Z();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperZ.move(convertirGrados(33));
+      stepperZ.move(convertirGrados(30));
     }
   }while(!flag);
 
