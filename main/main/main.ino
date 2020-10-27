@@ -11,9 +11,9 @@
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 200
-#define MOTOR_Y_RPM 200
-#define MOTOR_Z_RPM 200
+#define MOTOR_X_RPM 100
+#define MOTOR_Y_RPM 100
+#define MOTOR_Z_RPM 100
 
 // X motor
 #define DIR_X 2
@@ -37,7 +37,7 @@
 #define sizeBrazo 80
 #define sizeAnteBrazo 80
 #define phi 3.141593
-#define SubidaVertical 25
+#define SubidaVertical 15
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
 *************************************/
@@ -186,20 +186,8 @@ void loop() {
 
 
     case 'c':
-      ActivarMotores(1);
-      controller.move(0, convertirGrados(-7.57), convertirGrados(-25));
-      /*
-      controller.move(convertirGrados(0,2), convertirGrados(30), convertirGrados(20));
-      cinematicaInv(30, 20);
-      
-      delay(5000);
-      
-      controller.move(convertirGrados(0,2), 
-      convertirGrados(outCinematicoB), 
-      convertirGrados(outCinematicoC));
-      ActivarMotores(0);
-      delay(200);
-      */
+      //ActivarMotores(1);
+      cinematicaInv(0,125);
       dato = 0;
       break;
   

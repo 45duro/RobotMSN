@@ -51,8 +51,16 @@ void cinematicaInv(int AnguloB, int AnguloC){
       
       //Serial.print(" Cpuesto: ");  Serial.println(Cpuesto);
       //Serial.print(" nuevoC: ");  Serial.println(nuevoC);
-      float CpuestoNuevo = nuevoC - Cpuesto;
-      Serial.print("CpuestoN: ");  Serial.println(CpuestoNuevo);
+      float CpuestoNuevo;
+
+      if(AnguloC >= 90 ){
+        CpuestoNuevo= 180 - nuevoC - Cpuesto;
+        Serial.print("CpuestoN: ");  Serial.println(CpuestoNuevo);
+      }
+      else{
+        CpuestoNuevo= nuevoC - Cpuesto;
+        Serial.print("CpuestoN: ");  Serial.println(CpuestoNuevo);
+      }
       
       outCinematicoB=BpuestoNuevo;
       outCinematicoC=CpuestoNuevo;
