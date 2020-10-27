@@ -1,19 +1,68 @@
-/*void LeerJoysticks(){
 
-  LecturaDeJoystick [0] = analogRead(Joystick [0]);
-  LecturaDeJoystick [1] = analogRead(Joystick [1]);
-  LecturaDeJoystick2 [0] = analogRead(Joystick2 [0]);
-  LecturaDeJoystick2 [1] = analogRead(Joystick2 [1]);
-  /*Serial.print(LecturaDeJoystick [0]);
-  Serial.print("    ");
-  Serial.print(LecturaDeJoystick [1]);
-  Serial.print("    ");
-  Serial.print(LecturaBotonGuardar);
-  Serial.println();*/
-/*  
-  LecturaDeJoystick [0] = map (LecturaDeJoystick [0], 0 , 1023 , 6 , -6);
-  LecturaDeJoystick [1] = map (LecturaDeJoystick [1],  0 , 1023 , -6 , 6);
-  LecturaDeJoystick2 [0] = map (LecturaDeJoystick2 [0],  0 , 1023 , -6 , 6);
-  LecturaDeJoystick2 [1] = map (LecturaDeJoystick2 [1],  0 , 1023 , -6 , 6);
 
-}*/
+void cinematicaInv(int AnguloB, int AnguloC){
+  Bpuesto = 90 - AnguloB;
+  Cpuesto = AnguloC;
+
+  //Serial.print("Bpuesto: ");  Serial.print(Bpuesto); 
+  //Serial.print(" Cpuesto: ");  Serial.println(Cpuesto); 
+  r = find_RadioC(Cpuesto);
+      //Serial.println(r);
+      
+      float B = find_B(Cpuesto, r);
+      //Serial.println(B);
+
+      //Extraccion de coordenadas Polares y cordenadas Rectangulares
+      teta = extTeta(B);
+      //Serial.println(teta);
+      
+      x = r*cos(grad2rad(teta));
+      y = r*sin(grad2rad(teta));
+      //Serial.println(x);
+      //Serial.println(y);
+
+      //Esta es donde se entabla la nueva orden
+      float yNuevo = SubidaVertical + y;
+      float tetaNuevo = rad2Grad(atan(yNuevo/x));
+      //Serial.println(yNuevo);
+      //Serial.println(tetaNuevo);
+      
+      
+
+      r = yNuevo/sin(grad2rad(tetaNuevo));
+      //Serial.println(r);
+
+      //Cinematica
+
+      float nuevoB = find_B2(r);
+      //Serial.println(nuevoB);
+
+      float nuevoC = find_C2(r, nuevoB);
+      //Serial.println(nuevoC);
+
+
+      //Serial.print(" Bpuesto: ");  Serial.println(Bpuesto);
+      //Serial.print(" tetaNuevo: ");  Serial.println(tetaNuevo);
+      //Serial.print(" nuevoB: ");  Serial.println(nuevoB);
+      
+      float BpuestoNuevo = Bpuesto - (tetaNuevo + nuevoB);
+      Serial.print("BpuestoN: ");  Serial.println(BpuestoNuevo); 
+      
+      //Serial.print(" Cpuesto: ");  Serial.println(Cpuesto);
+      //Serial.print(" nuevoC: ");  Serial.println(nuevoC);
+      float CpuestoNuevo = nuevoC - Cpuesto;
+      Serial.print("CpuestoN: ");  Serial.println(CpuestoNuevo);
+      
+      outCinematicoB=BpuestoNuevo;
+      outCinematicoC=CpuestoNuevo;
+      
+      Serial.println(outCinematicoB);
+      Serial.println(outCinematicoC);
+      
+      outCinematicoB= AnguloB + outCinematicoB;
+      outCinematicoC= AnguloC + outCinematicoC;
+
+      Serial.println(outCinematicoB);
+      Serial.println(outCinematicoC);
+
+}

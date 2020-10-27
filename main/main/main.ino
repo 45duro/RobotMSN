@@ -1,20 +1,19 @@
-
-#include <Wire.h>
 #include <EEPROM.h>
 
 #include <Arduino.h>
-//#include "MultiDriver.h"
-//#include "SyncDriver.h"
 #include "BasicStepperDriver.h" // generic
+#include "MultiDriver.h"
+#include "SyncDriver.h"
+#include "GFButton.h"
 
 #define DEBUG 0
 
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 400
-#define MOTOR_Y_RPM 400
-#define MOTOR_Z_RPM 400
+#define MOTOR_X_RPM 500
+#define MOTOR_Y_RPM 500
+#define MOTOR_Z_RPM 500
 
 // X motor
 #define DIR_X 2
@@ -35,7 +34,10 @@
 
 #define limPos 50
 
-
+#define sizeBrazo 80
+#define sizeAnteBrazo 80
+#define phi 3.141593
+#define SubidaVertical 25
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
 *************************************/
@@ -43,13 +45,13 @@
 BasicStepperDriver stepperX(MOTOR_STEPS, DIR_X, STEP_X);
 BasicStepperDriver stepperY(MOTOR_STEPS, DIR_Y, STEP_Y);
 BasicStepperDriver stepperZ(MOTOR_STEPS, DIR_Z, STEP_Z);
+SyncDriver controller(stepperX, stepperY, stepperZ);
+
 void movimientoJoyStick(short, BasicStepperDriver, byte, byte);
 void ActivarMotores(boolean);
 void goToHome();
 boolean goToHome_X();
 
-//Declaracion del controlador
-//SyncDriver controller(stepperX, stepperY, stepperZ);
 
 
 /*************************************
@@ -59,12 +61,13 @@ boolean goToHome_X();
   VARIABLES GLOBALES
 *************************************/
 char dato = 0;
-int grados[3] = {0, 0, 0};
-int posiciones[limPos][3];
+float grados[3] = {0, 0, 90};
+float posiciones[limPos][3];
+int gradosDecorador[3];
 byte contador = 0;
 
-boolean LecturaBotonGuardar; byte BotonGuardar = A2;
-boolean LecturaBotonGuardarEEPROM; byte BotonGuardarEEPROM = A3;
+short LecturaBotonGuardar; const byte BotonGuardar = A2;
+boolean LecturaBotonGuardarEEPROM; const byte BotonGuardarEEPROM = A3;
 
 // ****************************
 //                            *
@@ -72,6 +75,7 @@ boolean LecturaBotonGuardarEEPROM; byte BotonGuardarEEPROM = A3;
 //                            *
 // ****************************
 short Joystick1 [3] = {A1,A0, A7};
+GFButton btn = GFButton(BotonGuardar, E_GFBUTTON_PULLUP_INTERNAL);
 
 // ****************************
 //                            *
@@ -80,9 +84,25 @@ short Joystick1 [3] = {A1,A0, A7};
 // ****************************
 struct ObjetoPosiciones{
   int contadorDeDatos = 0;
-  int MatrizPosiciones [limPos] [3];
+  float MatrizPosiciones [limPos] [3];
 };
 
+// ****************************
+//                            *
+//        CINEMATICA          *
+//                            *
+// ****************************
+
+//90 es el valor de inicio y 30 valor que viene de la matriz
+// asi mismo en c puesto 90 valor de inicio y  - 20 valor de la matriz
+float Bpuesto= 0, Cpuesto= 0; 
+float outCinematicoB=0, outCinematicoC=0;
+float radioC;
+float x, y, teta =0, r;
+
+
+float convertirGrados(short degree,  byte relacion = 1);
+void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112, byte relacion = 1);
 void setup() {
 
   //Declaracion de Sensores y pulsadores
@@ -102,13 +122,19 @@ void setup() {
   stepperZ.begin(MOTOR_Z_RPM, MICROSTEPS);
 
   ActivarMotores(false);
-  
+
+  // Attach callbacks to the button object
+  //btn.setPressHandler(button_on_press);
+  btn.setHoldHandler(button_on_hold);
+  //btn.setReleaseHandler(button_on_release);
+  btn.setClicksHandler(button_on_click);
 
 }
 
 void loop() {
   if(Serial.available()>0){
     dato = Serial.read();
+    Serial.println(dato);
   }
 
   switch(dato){
@@ -117,6 +143,10 @@ void loop() {
       limpiarPosiciones();
       goToHome();
       dato=0;
+      break;
+
+   case 'b':
+      //button.check();
       break;
 
     case 'o':
@@ -134,6 +164,13 @@ void loop() {
     case 'i':
       Serial.print(grados[0]); Serial.print("\t\t"); Serial.print(grados[1]); Serial.print("\t\t");  Serial.println(grados[2]);
       dato = 0; 
+      break;
+      
+    case 'v':
+      ActivarMotores(1);
+      stepperY.move(convertirGrados(42)); 
+      dato = 'o';
+      break;
 
     case 'e':
       LecturaDeEEPROM();
@@ -146,8 +183,31 @@ void loop() {
       detenerMotores();
       dato='h';
       break;
+
+
+    case 'c':
+      ActivarMotores(1);
+      controller.move(0, convertirGrados(-7.57), convertirGrados(-25));
+      /*
+      controller.move(convertirGrados(0,2), convertirGrados(30), convertirGrados(20));
+      cinematicaInv(30, 20);
+      
+      delay(5000);
+      
+      controller.move(convertirGrados(0,2), 
+      convertirGrados(outCinematicoB), 
+      convertirGrados(outCinematicoC));
+      ActivarMotores(0);
+      delay(200);
+      */
+      dato = 0;
+      break;
+  
+
+  }
+
+  if(dato == 'j'){
     
-    case 'j':
       
       ActivarMotores(1);
 
@@ -156,12 +216,27 @@ void loop() {
       short JoyIzqZ = analogRead(Joystick1[2]);
 
       
-      movimientoJoyStick(JoyIzqX, stepperX, 0, 100);
-      movimientoJoyStick(JoyIzqY, stepperY, 1, 100);
-      movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100);
+      movimientoJoyStick(JoyIzqX, stepperX, 0, 100, 2);
+      movimientoJoyStick(JoyIzqY, stepperY, 1, 100, 1);
+      movimientoJoyStick(JoyIzqZ, stepperZ, 2, 100, 1);
+      
+      
+      for(byte i = 0; i < 3; i++){
+        Serial.print(grados[i]); Serial.print("   ");}
+      
 
+      Serial.println();
+      
+      
       LecturaBotones();
-      if(LecturaBotonGuardar == 0){
+
+      //Chequeando el boton 1 o joystick principal
+      btn.process();
+
+      //Viene con tres estados si es 2, guarde un punto con cinematica de subida
+      //Si es un 1 guarde un punto de paso sin cinematica
+      //si es -1 no haga nada
+      if(LecturaBotonGuardar == 2 ){
         delay(300);
         if(contador == 0){
            Serial.println("Guardando Posiciones"); 
@@ -170,11 +245,37 @@ void loop() {
         for(byte i = 0; i < 3; i++)
           posiciones[contador][i]= grados[i];
 
+        //Agregando la cinematica
+        cinematicaInv(grados[1], grados[2]);
+        posiciones[contador+1][0]= grados[0];
+        posiciones[contador+1][1]= outCinematicoB;
+        posiciones[contador+1][2]= outCinematicoC;
+          
+
         for(byte i = 0; i < 3; i++){
           Serial.print(posiciones[contador][i]); Serial.print("\t\t");
         }
         Serial.println();
-        contador >= limPos -1 ? contador = 0:contador++;
+        contador >= limPos -1 ? contador = 0:contador+=2;
+        //Romper el ciclo ya que desde la misma clase no se deja
+        LecturaBotonGuardar =0;
+      }
+      else if(LecturaBotonGuardar == 1){
+        delay(300);
+        if(contador == 0){
+           Serial.println("Guardando Posiciones"); 
+        } 
+        for(byte i = 0; i < 3; i++)
+          posiciones[contador][i]= grados[i];
+
+        for(byte i = 0; i < 3; i++){
+          Serial.print(posiciones[contador][i]); Serial.print("\t\t");
+        }
+        Serial.println();
+        contador >= limPos -1 ? contador = 0:contador+=1;
+
+        //Romper el ciclo ya que desde la misma clase no se deja
+        LecturaBotonGuardar = 0;
       }
 
       if(!LecturaBotonGuardarEEPROM){
@@ -183,9 +284,7 @@ void loop() {
         dato=0;
       }
       
-      break;
-
-  
+      
 
   }
 }
@@ -198,18 +297,40 @@ void detenerMotores(){
 
 void rutinaGeneral(){
   
-  int xAnterior =0, yAnterior =0, zAnterior = 0;
+  int xAnterior =0, yAnterior =0, zAnterior = 90;
 
   for(byte i = 0; i < limPos; i++){
+
     int x = posiciones[i][0];
     int y = posiciones[i][1];
     int z = posiciones[i][2];
 
-    stepperX.move(convertirGrados(x-xAnterior));  
-    stepperY.move(convertirGrados(y-yAnterior));  
-    stepperZ.move(convertirGrados(z-zAnterior));  
+    Serial.print(F("G")); Serial.println(i);
 
+    if(((y-yAnterior) < -50 || (y-yAnterior) > 50 || (z-zAnterior) > 50 || (z-zAnterior) < -50) && ( i != 0 && i != limPos-1)){
+      Serial.print(F("Error por desbordamiento en linea: ")); 
+      Serial.print(i) ; 
+      Serial.println(" se puede estrellar") ; 
+    }
+    else{
+      stepperX.move(convertirGrados(x-xAnterior, 2));  
+  //    stepperY.move(convertirGrados(y-yAnterior));  
+  //    stepperZ.move(convertirGrados(z-zAnterior));  
+      
+      //Solucionar el tema de los angulos cuando se pasan y que de en recta
+        controller.move(0, 
+                        convertirGrados(y-yAnterior),
+                        convertirGrados(z-zAnterior));
+      
+
+    }
     xAnterior = x; yAnterior = y; zAnterior = z;
+   
+
+    if(!xAnterior && !yAnterior && !zAnterior)
+      delay(0);
+    else
+      delay(1000);
   }
   delay(200);
   
@@ -254,29 +375,30 @@ void GuardarEnEEPROM(){
     Serial.println(sizeof(MiObjeto));
 }
 
-void LecturaBotones(){
- 
-  LecturaBotonGuardar = digitalRead(BotonGuardar);
-  LecturaBotonGuardarEEPROM = digitalRead(BotonGuardarEEPROM);
-  
-}
+
 
 
 //movimientoJoyStick(valor A Pasar, Motor_para_accionar, vector donde se Guarda, Valor o rango de sensibilidad)
-void movimientoJoyStick(short joy, byte pos, byte limCentral = 112){
+void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112, byte relacion = 1){
     
     //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
     //El valor no entra linealizado es decir va de 0 a 1023
     if (joy < (512-limCentral) || joy > (512+limCentral)){
-
+    
       //linealizo de -10 a 10 para la suavidad
-      joy = map(joy,0,1023, -2, 2);
+      joy = map(joy,0,1023, -1, 1);
       //guardar en variable global
       grados[pos] += joy;
 
-      #if debug
-      Serial.print(joy); Serial.print("\t\t");  Serial.println(grados[0]);
-      #endif
+//      #if debug
+//        Serial.print(joy); Serial.print("\t\t");  Serial.print(grados[pos]);
+//      #endif
+      Motor.move(convertirGrados(joy, relacion));
+    }
+    
+    else{
+      Motor.stop();
+    }
 }
 
 
@@ -291,9 +413,19 @@ void ActivarMotores(bool Activar){
 
 
 
-
-int convertirGrados(short degree){
-  return 11.3222*degree;
+//Relacion de 1:2 = 2, Relacion de 1 a 1 = 1
+float convertirGrados(short degree,  byte relacion = 1){
+  float result;
+  switch (relacion){
+    case 1:
+      result = 22.6444*degree;
+      break;
+    case 2:
+      result = 11.3222*degree;
+      break;
+    
+  }
+  return result;
 }
 
 boolean goToHome_X(){
@@ -349,17 +481,19 @@ void goToHome(){
     flag = goToHome_Y();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperY.move(convertirGrados(25));
+      stepperY.move(convertirGrados(10));
     }
   }while(!flag);
 
+  
+
   //Setear Z
-  stepperZ.startMove(100 * MOTOR_STEPS * MICROSTEPS);
+  stepperZ.startMove(-100 * MOTOR_STEPS * MICROSTEPS);
   do{
     flag = goToHome_Z();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperZ.move(convertirGrados(-55));
+      stepperZ.move(convertirGrados(33));
     }
   }while(!flag);
 
@@ -371,7 +505,7 @@ void goToHome(){
     flag = goToHome_X();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperX.move(convertirGrados(-25));
+      stepperX.move(convertirGrados(-115, 2));
     }
   }while(!flag);
 
@@ -384,6 +518,6 @@ void goToHome(){
 
 void limpiarPosiciones(){
   for(byte i=0; i < 3; i++){
-    grados[i]=0;
+    i == 2? grados[i]= 90 : grados[i]=0;
   }
 }
