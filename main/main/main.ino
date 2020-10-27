@@ -263,26 +263,20 @@ void LecturaBotones(){
 
 
 //movimientoJoyStick(valor A Pasar, Motor_para_accionar, vector donde se Guarda, Valor o rango de sensibilidad)
-void movimientoJoyStick(short joy, BasicStepperDriver Motor, byte pos, byte limCentral = 112){
+void movimientoJoyStick(short joy, byte pos, byte limCentral = 112){
     
     //Valores del joystick para evitar que se mueva en el centro o rango de NO movimiento cuando se suelta
     //El valor no entra linealizado es decir va de 0 a 1023
     if (joy < (512-limCentral) || joy > (512+limCentral)){
 
       //linealizo de -10 a 10 para la suavidad
-      joy = map(joy,0,1023, -3, 3);
+      joy = map(joy,0,1023, -2, 2);
       //guardar en variable global
       grados[pos] += joy;
 
       #if debug
       Serial.print(joy); Serial.print("\t\t");  Serial.println(grados[0]);
       #endif
-      Motor.move(convertirGrados(joy));
-    }
-    
-    else{
-      Motor.stop();
-    }
 }
 
 
