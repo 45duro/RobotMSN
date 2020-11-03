@@ -11,9 +11,9 @@
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 300
-#define MOTOR_Y_RPM 300
-#define MOTOR_Z_RPM 300
+#define MOTOR_X_RPM 400
+#define MOTOR_Y_RPM 400
+#define MOTOR_Z_RPM 400
 
 // X motor
 #define DIR_X 2
