@@ -37,7 +37,7 @@
 #define sizeBrazo 80
 #define sizeAnteBrazo 80
 #define phi 3.141593
-#define SubidaVertical 15
+#define SubidaVertical 25
 /*************************************
   DECLARACION DE OBJETOS PRINCIPALES
 *************************************/
@@ -187,10 +187,71 @@ void loop() {
 
     case 'c':
       //ActivarMotores(1);
-      cinematicaInv(0,125);
+      cinematicaInv(38,83);
       dato = 0;
       break;
-  
+    /*
+    case 'l':
+      byte matriz[limPos][3] ={
+        {  -14 , 8 , 71  },
+        { -14 , 8 , 71  },
+        { -14 , 13  , 63  },
+        { -14 , 13  , 63  },
+        { -14 , 8 , 69  },
+        { 17  , 20  , 73  },
+        { 17  , 20  , 69  },
+        { 17  , 20  , 69  },
+        { 17  , 20  , 69  },
+        { 17  , 20  , 69  },
+        { 17  , 14  , 73  },
+        { 17  , 14  , 73  },
+        { 4 , 16  , 76  },
+        { 4 , 19  , 78  },
+        { 8 , 22  , 78  },
+        { 8 , 22  , 71  },
+        { 8 , 22  , 71  },
+        { 8 , 22  , 78  },
+        { 8 , 22  , 78  },
+        { 2 , 16  , 71  },
+        { 2 , 16  , 68  },
+        { 2 , 16  , 75  },
+        { 2 , 16  , 75  },
+        { 25  , 16  , 75  },
+        { 25  , 16  , 80  },
+        { 25  , 29  , 81  },
+        { 25  , 29  , 76  },
+        { 25  , 29  , 76  },
+        { 25  , 29  , 84  },
+        { 25  , 29  , 88  },
+        { -11 , 14  , 88  },
+        { -38 , 1 , 67  },
+        { -38 , -4  , 63  },
+        { -38 , 3 , 60  },
+        { -38 , -3  , 60  },
+        { -38 , -5  , 64  },
+        { -38 , -5  , 70  },
+        { -38 , 7 , 70  },
+        { -13 , 12  , 75  },
+        { -13 , 14  , 80  },
+        { -11 , 27  , 75  },
+        { -24 , 27  , 75  },
+        { -24 , 27  , 75  },
+        { -24 , 27  , 82  },
+        { -24 , -1  , 86  },
+        { 103 , -1  , 86  },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 }
+      };
+
+      for(byte fil = 0; fil < limPos; fil++){
+        for(byte col = 0; col < 3; col++){
+           posiciones[fil][col] = matriz[fil][col];
+        }
+      }
+      break;
+      */
 
   }
 
@@ -212,6 +273,11 @@ void loop() {
        if(JoyIzqX != 0 || JoyIzqY != 0 || JoyIzqZ != 0 ){
          //controller.move(0, convertirGrados(auxJoy1[1]),convertirGrados(auxJoy1[2]));
          controller.move(convertirGrados(JoyIzqX, 2), convertirGrados(JoyIzqY), convertirGrados(JoyIzqZ));
+         
+          for(byte i = 0; i < 3; i++){
+            Serial.print(grados[i]); Serial.print("   ");
+          }
+          Serial.println();
        }
        else{
           stepperX.stop();
@@ -219,12 +285,6 @@ void loop() {
           stepperZ.stop();
        }
 
-      for(byte i = 0; i < 3; i++){
-        Serial.print(grados[i]); Serial.print("   ");
-      }
-      
-
-      Serial.println();
       
       
       LecturaBotones();
@@ -288,6 +348,69 @@ void loop() {
       
 
   }
+  else if(dato == 'l'){
+      static short matriz2 [limPos][3] ={
+        {  -14 , 8 , 87  },
+        { -14 , 8 , 87  },
+        { -14 , 16  , 69  },
+        { -14 , 16  , 65  },
+        { -14 , 3 , 69  },
+        { 17  , 20  , 73  },
+        { 17  , 20  , 69  },
+        { 17  , 20  , 69  },
+        { 17  , 20  , 69  },
+        { 17  , 20  , 69  },
+        { 17  , 14  , 73  },
+        { 17  , 14  , 73  },
+        { 4 , 16  , 76  },
+        { 4 , 19  , 78  },
+        { 8 , 22  , 78  },
+        { 8 , 22  , 71  },
+        { 8 , 22  , 71  },
+        { 8 , 22  , 78  },
+        { 8 , 22  , 78  },
+        { 2 , 16  , 71  },
+        { 2 , 16  , 68  },
+        { 2 , 16  , 75  },
+        { 2 , 16  , 75  },
+        { 27  , 16  , 75  },
+        { 27  , 16  , 80  },
+        { 27  , 29  , 81  },
+        { 27  , 29  , 76  },
+        { 27  , 29  , 76  },
+        { 27  , 29  , 84  },
+        { 27  , 29  , 88  },
+        { -11 , 14  , 88  },
+        { -38 , 1 , 67  },
+        { -38 , -4  , 63  },
+        { -38 , 3 , 60  },
+        { -38 , -3  , 60  },
+        { -38 , -5  , 64  },
+        { -38 , -5  , 70  },
+        { -38 , 7 , 70  },
+        { -13 , 12  , 75  },
+        { -13 , 14  , 80  },
+        { -11 , 27  , 75  },
+        { -24 , 27  , 75  },
+        { -24 , 27  , 75  },
+        { -24 , 27  , 82  },
+        { -24 , -1  , 86  },
+        { 103 , -1  , 86  },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 }
+
+      };
+
+      for(byte fil = 0; fil < limPos; fil++){
+        for(byte col = 0; col < 3; col++){
+           posiciones[fil][col] = float(matriz2[fil][col]);
+        }
+      } 
+
+      dato = 0;
+  }
 }
 
 void detenerMotores(){
@@ -318,15 +441,16 @@ void rutinaGeneral(){
     }
     else{
       stepperX.move(convertirGrados(x-xAnterior, 2));  
-  //    stepperY.move(convertirGrados(y-yAnterior));  
-  //    stepperZ.move(convertirGrados(z-zAnterior));  
+      stepperY.move(convertirGrados(y-yAnterior));  
+      stepperZ.move(convertirGrados(z-zAnterior));  
       
       //Solucionar el tema de los angulos cuando se pasan y que de en recta
-      delay(1000);
+      delay(100);
+      /*
       controller.move(0, 
                         convertirGrados(y-yAnterior),
                         convertirGrados(z-zAnterior));
-      
+      */
 
     }
     xAnterior = x; yAnterior = y; zAnterior = z;
@@ -458,7 +582,7 @@ void goToHome(){
     flag = goToHome_Y();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperY.move(convertirGrados(10));
+      stepperY.move(convertirGrados(15));
     }
   }while(!flag);
 
