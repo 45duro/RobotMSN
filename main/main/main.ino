@@ -6,7 +6,7 @@
 #include "SyncDriver.h"
 #include "GFButton.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
@@ -63,7 +63,7 @@ char dato = 0;
 float grados[3] = {0, 0, 90};
 float posiciones[limPos][3];
 int gradosDecorador[3];
-byte contador = 0;
+byte contador = 1;
 
 short LecturaBotonGuardar; const byte BotonGuardar = A2;
 boolean LecturaBotonGuardarEEPROM; const byte BotonGuardarEEPROM = A3;
@@ -307,14 +307,15 @@ void loop() {
         { 8 , 20  , 84  },
         { 8 , 20  , 71  },
         { -2  , 12  , 78  },
-        { -2  , 12  , 68  },
-        { -2  , 12  , 68  },
+        { -2  , 14  , 68  },
+        { -2  , 14  , 68  },
         { -2  , 12  , 75  },
-        { 20  , 12  , 75  },
-        { 26  , 20  , 79  },
-        { 26  , 20  , 82  },
-        { 24  , 24  , 82  },
-        { 24  , 25  , 75  },
+        { -2  , 10  , 90  },
+        { 27  , 20  , 80  },
+        { 27  , 26  , 76  },
+        { 27  , 26  , 76  },
+        { 27  , 20  , 80  },
+        { 27  , 15  , 90  },
         { -42 , -9  , 90  },
         { -42 , -9  , 72  },
         { -42 , -3  , 58  },
@@ -332,7 +333,6 @@ void loop() {
         { -25 , -3  , 82  },
         { 13  , -3  , 82  },
         { 91  , -3  , 82  },
-        { 0 , 0 , 0 },
         { 0 , 0 , 0 },
         { 0 , 0 , 0 },
         { 0 , 0 , 0 },
