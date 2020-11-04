@@ -6,14 +6,14 @@
 #include "SyncDriver.h"
 #include "GFButton.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
 #define MOTOR_STEPS 64
 #define MICROSTEPS 1
-#define MOTOR_X_RPM 400
-#define MOTOR_Y_RPM 400
-#define MOTOR_Z_RPM 400
+#define MOTOR_X_RPM 300
+#define MOTOR_Y_RPM 300
+#define MOTOR_Z_RPM 300
 
 // X motor
 #define DIR_X 2
@@ -128,7 +128,8 @@ void setup() {
   btn.setHoldHandler(button_on_hold);
   //btn.setReleaseHandler(button_on_release);
   btn.setClicksHandler(button_on_click);
-
+  
+  LecturaDeEEPROM();
 }
 
 void loop() {
@@ -286,71 +287,74 @@ void loop() {
       
 
   }
-  /*
+  #if DEBUG
   else if(dato == 'l'){
+      
       static short matriz2 [limPos][3] ={
-        {  -13 , 8 , 78  },
-        { -16 , 10 , 68  },
-        { -16 , 10 , 64  },
-        { -16 , 10 , 64  },
-        { -16 , 10 , 73  },
-        { 17  , 20  , 73  },
-        { 17  , 20  , 69  },
-        { 17  , 20  , 69  },
-        { 17  , 20  , 69  },
-        { 17  , 20  , 69  },
-        { 17  , 14  , 73  },
-        { 17  , 14  , 73  },
-        { 4 , 16  , 76  },
-        { 4 , 19  , 78  },
-        { 8 , 22  , 78  },
-        { 8 , 22  , 71  },
-        { 8 , 22  , 71  },
-        { 8 , 22  , 78  },
-        { 8 , 22  , 78  },
-        { 2 , 16  , 71  },
-        { 2 , 16  , 68  },
-        { 2 , 16  , 75  },
-        { 2 , 16  , 75  },
-        { 27  , 16  , 75  },
-        { 27  , 16  , 80  },
-        { 27  , 29  , 81  },
-        { 27  , 29  , 76  },
-        { 27  , 29  , 76  },
-        { 27  , 29  , 84  },
-        { 27  , 29  , 88  },
-        { -11 , 14  , 88  },
-        { -38 , 1 , 67  },
-        { -38 , -4  , 63  },
-        { -38 , 3 , 60  },
-        { -38 , -3  , 60  },
-        { -38 , -5  , 64  },
-        { -38 , -5  , 70  },
-        { -38 , 7 , 70  },
-        { -13 , 12  , 75  },
-        { -13 , 14  , 80  },
-        { -11 , 27  , 75  },
-        { -24 , 27  , 75  },
-        { -24 , 27  , 75  },
-        { -24 , 27  , 82  },
-        { -24 , -1  , 86  },
-        { 103 , -1  , 86  },
+        {  -26 , 13  , 72  },
+        { -15 , 8 , 70  },
+        { -15 , 12  , 66  },
+        { -15 , 12  , 66  },
+        { -15 , 12  , 74  },
+        { -15 , 12  , 76  },
+        { 0 , 12  , 76  },
+        { -5  , 15  , 74  },
+        { 0 , 15  , 74  },
+        { 0 , 15  , 67  },
+        { 0 , 15  , 73  },
+        { 0 , 15  , 73  },
+        { 0 , 15  , 77  },
+        { 8 , 20  , 84  },
+        { 8 , 20  , 71  },
+        { -2  , 12  , 78  },
+        { -2  , 12  , 68  },
+        { -2  , 12  , 68  },
+        { -2  , 12  , 75  },
+        { 20  , 12  , 75  },
+        { 26  , 20  , 79  },
+        { 26  , 20  , 82  },
+        { 24  , 24  , 82  },
+        { 24  , 25  , 75  },
+        { -42 , -9  , 90  },
+        { -42 , -9  , 72  },
+        { -42 , -3  , 58  },
+        { -42 , 2 , 58  },
+        { -42 , -1  , 65  },
+        { -42 , -4  , 65  },
+        { -42 , 5 , 77  },
+        { -40 , 5 , 81  },
+        { -9  , 23  , 80  },
+        { -9  , 23  , 74  },
+        { -9  , 23  , 73  },
+        { -25 , 23  , 73  },
+        { -25 , 23  , 82  },
+        { -25 , 23  , 82  },
+        { -25 , -3  , 82  },
+        { 13  , -3  , 82  },
+        { 91  , -3  , 82  },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
+        { 0 , 0 , 0 },
         { 0 , 0 , 0 },
         { 0 , 0 , 0 },
         { 0 , 0 , 0 },
         { 0 , 0 , 0 }
 
-      };
 
+
+      };
       for(byte fil = 0; fil < limPos; fil++){
         for(byte col = 0; col < 3; col++){
            posiciones[fil][col] = float(matriz2[fil][col]);
         }
       } 
-
       GuardarEnEEPROM();
       dato = 0;
-  }*/
+      
+  }
+  #endif
 }
 
 void detenerMotores(){
@@ -522,7 +526,7 @@ void goToHome(){
     flag = goToHome_Y();
     if(flag){
       //Moverse ciertos grados hacia adelante
-      stepperY.move(convertirGrados(15));
+      stepperY.move(convertirGrados(18));
     }
   }while(!flag);
 
