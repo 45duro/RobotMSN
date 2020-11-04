@@ -33,6 +33,7 @@
 #define STOPPER_PIN_X 9
 
 #define limPos 50
+#define ciclos 15
 
 #define sizeBrazo 80
 #define sizeAnteBrazo 80
@@ -63,7 +64,7 @@ char dato = 0;
 float grados[3] = {0, 0, 90};
 float posiciones[limPos][3];
 int gradosDecorador[3];
-byte contador = 1;
+byte contador = 1, rutinas = 0;
 
 short LecturaBotonGuardar; const byte BotonGuardar = A2;
 boolean LecturaBotonGuardarEEPROM; const byte BotonGuardarEEPROM = A3;
@@ -130,6 +131,9 @@ void setup() {
   btn.setClicksHandler(button_on_click);
   
   LecturaDeEEPROM();
+  goToHome();
+  dato = 'r';
+ 
 }
 
 void loop() {
@@ -179,10 +183,16 @@ void loop() {
       break;
     
     case 'r':
+      
       ActivarMotores(1);
       rutinaGeneral();
       detenerMotores();
-      dato='h';
+      goToHome();
+      rutinas++;
+      if(rutinas >= ciclos){
+        rutinas = 0;
+        delay(60000);
+      }
       break;
 
 
@@ -291,9 +301,9 @@ void loop() {
   else if(dato == 'l'){
       
       static short matriz2 [limPos][3] ={
-        {  -26 , 13  , 72  },
-        { -15 , 8 , 70  },
-        { -15 , 12  , 66  },
+        { -26, 13  , 72  },
+        { -15, 8 , 70  },
+        { -15, 12  , 66  },
         { -15 , 12  , 66  },
         { -15 , 12  , 74  },
         { -15 , 12  , 76  },
