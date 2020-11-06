@@ -116,7 +116,7 @@ void setup() {
   
   pinMode(8,OUTPUT);
   
-  Serial.begin(115200);
+  Serial.begin(9600);
   
   stepperX.begin(MOTOR_X_RPM, MICROSTEPS);
   stepperY.begin(MOTOR_Y_RPM, MICROSTEPS);
@@ -186,7 +186,6 @@ void loop() {
       break;
     
     case 'r':
-      
       ActivarMotores(1);
       rutinaGeneral();
       detenerMotores();
